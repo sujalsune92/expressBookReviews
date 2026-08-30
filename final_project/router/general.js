@@ -8,9 +8,8 @@ let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
 
-// Register a new user
+// Register
 public_users.post("/register", (req, res) => {
-
     const username = req.body.username;
     const password = req.body.password;
 
@@ -39,11 +38,10 @@ public_users.post("/register", (req, res) => {
 
 // ==================================================
 // TASK 10
-// Axios + Async/Await / Promise
 // ==================================================
 
 
-// Get all books using Async/Await
+// 1. Get all books using Async/Await
 public_users.get('/', async (req, res) => {
     try {
         const response = await axios.get(
@@ -60,7 +58,7 @@ public_users.get('/', async (req, res) => {
 });
 
 
-// Get book details based on ISBN using Promise
+// 2. Get book by ISBN using Promise
 public_users.get('/isbn/:isbn', (req, res) => {
 
     const isbn = req.params.isbn;
@@ -79,28 +77,19 @@ public_users.get('/isbn/:isbn', (req, res) => {
         })
         .catch(error => {
 
-            if (books[isbn]) {
-                return res.status(200).json(books[isbn]);
-            }
-
-            return res.status(404).json({
-                message: "Book not found"
+            return res.status(500).json({
+                message: "Error retrieving book by ISBN"
             });
         });
 });
 
 
-// Get books based on author using Async/Await
+// 3. Get books by author using Async/Await
 public_users.get('/author/:author', async (req, res) => {
 
     try {
 
         const author = decodeURIComponent(req.params.author);
-
-        await axios.get(
-            'https://jsonplaceholder.typicode.com/posts/1'
-        );
-
         let result = {};
 
         for (let isbn in books) {
@@ -113,7 +102,13 @@ public_users.get('/author/:author', async (req, res) => {
             }
         }
 
-        return res.status(200).json(result);
+        if (Object.keys(result).length > 0) {
+            return res.status(200).json(result);
+        }
+
+        return res.status(404).json({
+            message: "No books found for this author"
+        });
 
     } catch (error) {
 
@@ -124,14 +119,12 @@ public_users.get('/author/:author', async (req, res) => {
 });
 
 
-// Get books based on title using Promise
+// 4. Get books by title using Promise
 public_users.get('/title/:title', (req, res) => {
 
     const title = decodeURIComponent(req.params.title);
 
-    axios.get(
-        'https://jsonplaceholder.typicode.com/posts/1'
-    )
+    axios.get('https://jsonplaceholder.typicode.com/posts/1')
         .then(response => {
 
             let result = {};
@@ -139,15 +132,20 @@ public_users.get('/title/:title', (req, res) => {
             for (let isbn in books) {
 
                 if (
-                    books[isbn].title.toLowerCase().includes(
-                        title.toLowerCase()
-                    )
+                    books[isbn].title.toLowerCase() ===
+                    title.toLowerCase()
                 ) {
                     result[isbn] = books[isbn];
                 }
             }
 
-            return res.status(200).json(result);
+            if (Object.keys(result).length > 0) {
+                return res.status(200).json(result);
+            }
+
+            return res.status(404).json({
+                message: "Book not found"
+            });
 
         })
         .catch(error => {
@@ -170,9 +168,7 @@ public_users.get('/review/:isbn', (req, res) => {
         });
     }
 
-    return res.status(200).json(
-        books[isbn].reviews
-    );
+    return res.status(200).json(books[isbn].reviews);
 });
 
 
