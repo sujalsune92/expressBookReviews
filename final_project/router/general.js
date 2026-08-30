@@ -8,10 +8,10 @@ let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
 
-// Register
+// Register a new user
 public_users.post("/register", (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+
+    const { username, password } = req.body;
 
     if (!username || !password) {
         return res.status(400).json({
@@ -37,12 +37,13 @@ public_users.post("/register", (req, res) => {
 
 
 // ==================================================
-// TASK 10
+// TASK 10 - Axios + Async/Await / Promise
 // ==================================================
 
 
 // 1. Get all books using Async/Await
 public_users.get('/', async (req, res) => {
+
     try {
         const response = await axios.get(
             'https://jsonplaceholder.typicode.com/posts/1'
@@ -63,24 +64,27 @@ public_users.get('/isbn/:isbn', (req, res) => {
 
     const isbn = req.params.isbn;
 
-    axios.get('https://jsonplaceholder.typicode.com/posts/1')
-        .then(response => {
+    axios.get(
+        'https://jsonplaceholder.typicode.com/posts/1'
+    )
+    .then(response => {
 
-            if (books[isbn]) {
-                return res.status(200).json(books[isbn]);
-            }
+        if (books[isbn]) {
+            return res.status(200).json(books[isbn]);
+        }
 
-            return res.status(404).json({
-                message: "Book not found"
-            });
-
-        })
-        .catch(error => {
-
-            return res.status(500).json({
-                message: "Error retrieving book by ISBN"
-            });
+        return res.status(404).json({
+            message: "Book not found"
         });
+
+    })
+    .catch(error => {
+
+        return res.status(500).json({
+            message: "Error retrieving book by ISBN"
+        });
+
+    });
 });
 
 
@@ -90,6 +94,11 @@ public_users.get('/author/:author', async (req, res) => {
     try {
 
         const author = decodeURIComponent(req.params.author);
+
+        await axios.get(
+            'https://jsonplaceholder.typicode.com/posts/1'
+        );
+
         let result = {};
 
         for (let isbn in books) {
@@ -102,19 +111,20 @@ public_users.get('/author/:author', async (req, res) => {
             }
         }
 
-        if (Object.keys(result).length > 0) {
-            return res.status(200).json(result);
+        if (Object.keys(result).length === 0) {
+            return res.status(404).json({
+                message: "No books found for this author"
+            });
         }
 
-        return res.status(404).json({
-            message: "No books found for this author"
-        });
+        return res.status(200).json(result);
 
     } catch (error) {
 
         return res.status(500).json({
             message: "Error retrieving books by author"
         });
+
     }
 });
 
@@ -124,40 +134,43 @@ public_users.get('/title/:title', (req, res) => {
 
     const title = decodeURIComponent(req.params.title);
 
-    axios.get('https://jsonplaceholder.typicode.com/posts/1')
-        .then(response => {
+    axios.get(
+        'https://jsonplaceholder.typicode.com/posts/1'
+    )
+    .then(response => {
 
-            let result = {};
+        let result = {};
 
-            for (let isbn in books) {
+        for (let isbn in books) {
 
-                if (
-                    books[isbn].title.toLowerCase() ===
-                    title.toLowerCase()
-                ) {
-                    result[isbn] = books[isbn];
-                }
+            if (
+                books[isbn].title.toLowerCase() ===
+                title.toLowerCase()
+            ) {
+                result[isbn] = books[isbn];
             }
+        }
 
-            if (Object.keys(result).length > 0) {
-                return res.status(200).json(result);
-            }
-
+        if (Object.keys(result).length === 0) {
             return res.status(404).json({
                 message: "Book not found"
             });
+        }
 
-        })
-        .catch(error => {
+        return res.status(200).json(result);
 
-            return res.status(500).json({
-                message: "Error retrieving books by title"
-            });
+    })
+    .catch(error => {
+
+        return res.status(500).json({
+            message: "Error retrieving books by title"
         });
+
+    });
 });
 
 
-// Get book review
+// 5. Get book review
 public_users.get('/review/:isbn', (req, res) => {
 
     const isbn = req.params.isbn;
@@ -168,7 +181,9 @@ public_users.get('/review/:isbn', (req, res) => {
         });
     }
 
-    return res.status(200).json(books[isbn].reviews);
+    return res.status(200).json(
+        books[isbn].reviews
+    );
 });
 
 
